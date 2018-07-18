@@ -2,7 +2,6 @@
 package source
 
 import (
-	"context"
 	"time"
 )
 
@@ -17,8 +16,9 @@ type Source interface {
 type ChangeSet struct {
 	Data      []byte
 	Checksum  string
-	Timestamp time.Time
+	Format    string
 	Source    string
+	Timestamp time.Time
 }
 
 // Watcher watches a source for changes
@@ -26,10 +26,3 @@ type Watcher interface {
 	Next() (*ChangeSet, error)
 	Stop() error
 }
-
-type Options struct {
-	// for alternative data
-	Context context.Context
-}
-
-type Option func(o *Options)

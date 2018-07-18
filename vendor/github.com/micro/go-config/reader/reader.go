@@ -9,7 +9,7 @@ import (
 
 // Reader is an interface for merging changesets
 type Reader interface {
-	Parse(...*source.ChangeSet) (*source.ChangeSet, error)
+	Merge(...*source.ChangeSet) (*source.ChangeSet, error)
 	Values(*source.ChangeSet) (Values, error)
 	String() string
 }
@@ -18,6 +18,8 @@ type Reader interface {
 type Values interface {
 	Bytes() []byte
 	Get(path ...string) Value
+	Map() map[string]interface{}
+	Scan(v interface{}) error
 }
 
 // Value represents a value of any type

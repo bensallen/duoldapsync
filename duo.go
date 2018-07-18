@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/url"
 
 	"github.com/duosecurity/duo_api_golang"
@@ -119,7 +118,6 @@ func (api *AdminAPI) CreateUser(params url.Values) (*CreateUserResponse, error) 
 	}
 
 	ret := &CreateUserResponse{}
-	fmt.Printf("%s\n", body)
 	if err = json.Unmarshal(body, ret); err != nil {
 		return nil, err
 	}

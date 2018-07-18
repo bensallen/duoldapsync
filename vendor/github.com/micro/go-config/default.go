@@ -81,8 +81,9 @@ func (c *config) watch(idx int, s source.Source) {
 			c.sets[idx] = cs
 
 			// merge sets
-			set, err := c.opts.Reader.Parse(c.sets...)
+			set, err := c.opts.Reader.Merge(c.sets...)
 			if err != nil {
+				c.Unlock()
 				return err
 			}
 
@@ -161,35 +162,62 @@ func (c *config) update() {
 	}
 }
 
+func (c *config) Map() map[string]interface{} {
+	c.RLock()
+	defer c.RUnlock()
+	return c.vals.Map()
+}
+
+func (c *config) Scan(v interface{}) error {
+	c.RLock()
+	defer c.RUnlock()
+	return c.vals.Scan(v)
+}
+
 // sync loads all the sources, calls the parser and updates the config
-func (c *config) sync() {
+func (c *config) Sync() error {
 	var sets []*source.ChangeSet
 
 	c.Lock()
 
 	// read the source
+	var gerr []string
+
 	for _, source := range c.sources {
 		ch, err := source.Read()
 		if err != nil {
+			gerr = append(gerr, err.Error())
 			continue
 		}
 		sets = append(sets, ch)
 	}
 
 	// merge sets
-	set, err := c.opts.Reader.Parse(sets...)
+	set, err := c.opts.Reader.Merge(sets...)
 	if err != nil {
-		return
+		c.Unlock()
+		return err
 	}
 
 	// set values
-	c.vals, _ = c.opts.Reader.Values(set)
+	vals, err := c.opts.Reader.Values(set)
+	if err != nil {
+		c.Unlock()
+		return err
+	}
+	c.vals = vals
 	c.set = set
 
 	c.Unlock()
 
 	// update watchers
 	c.update()
+
+	if len(gerr) > 0 {
+		return fmt.Errorf("source loading errors: %s", strings.Join(gerr, "\n"))
+	}
+
+	return nil
 }
 
 // reload reads the sets and creates new values
@@ -197,7 +225,7 @@ func (c *config) reload() {
 	c.Lock()
 
 	// merge sets
-	set, err := c.opts.Reader.Parse(c.sets...)
+	set, err := c.opts.Reader.Merge(c.sets...)
 	if err != nil {
 		c.Unlock()
 		return
@@ -225,7 +253,7 @@ func (c *config) Close() error {
 
 func (c *config) Get(path ...string) reader.Value {
 	if !c.loaded() {
-		c.sync()
+		c.Sync()
 	}
 
 	c.Lock()
@@ -268,7 +296,7 @@ func (c *config) Get(path ...string) reader.Value {
 
 func (c *config) Bytes() []byte {
 	if !c.loaded() {
-		c.sync()
+		c.Sync()
 	}
 
 	c.Lock()
@@ -337,6 +365,10 @@ func (c *config) Watch(path ...string) (Watcher, error) {
 	}()
 
 	return w, nil
+}
+
+func (c *config) String() string {
+	return "config"
 }
 
 func (w *watcher) Next() (reader.Value, error) {

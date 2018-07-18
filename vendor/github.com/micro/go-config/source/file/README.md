@@ -1,10 +1,14 @@
 # File Source
 
-The file source reads json config from a file
+The file source reads config from a file. 
 
-## File Format
+It uses the File extension to determine the Format e.g `config.yaml` has the yaml format. 
+It does not make use of encoders or interpet the file data. If a file extension is not present 
+the source Format will default to the Encoder in options.
 
-The expected file format is json
+## Example
+
+A config file format in json
 
 ```json
 {
@@ -23,11 +27,32 @@ The expected file format is json
 
 ## New Source
 
-Specify file source with path to file. Path is optional, it will default to `config.json`
+Specify file source with path to file. Path is optional and will default to `config.json`
 
 ```go
 fileSource := file.NewSource(
 	file.WithPath("/tmp/config.json"),
+)
+```
+
+## File Format
+
+To load different file formats e.g yaml, toml, xml simply specify them with their extension
+
+```
+fileSource := file.NewSource(
+        file.WithPath("/tmp/config.yaml"),
+)
+```
+
+If you want to specify a file without extension, ensure you set the encoder to the same format
+
+```
+e := toml.NewEncoder()
+
+fileSource := file.NewSource(
+        file.WithPath("/tmp/config"),
+	source.WithEncoder(e),
 )
 ```
 
@@ -42,3 +67,4 @@ conf := config.NewConfig()
 // Load file source
 conf.Load(fileSource)
 ```
+

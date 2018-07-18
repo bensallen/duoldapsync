@@ -3,6 +3,7 @@ package json
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	simple "github.com/bitly/go-simplejson"
@@ -66,12 +67,59 @@ func (j *jsonValues) Bytes() []byte {
 	return b
 }
 
+func (j *jsonValues) Map() map[string]interface{} {
+	m, _ := j.sj.Map()
+	return m
+}
+
+func (j *jsonValues) Scan(v interface{}) error {
+	b, err := j.sj.MarshalJSON()
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(b, v)
+}
+
+func (j *jsonValues) String() string {
+	return "json"
+}
+
 func (j *jsonValue) Bool(def bool) bool {
-	return j.Json.MustBool(def)
+	b, err := j.Json.Bool()
+	if err == nil {
+		return b
+	}
+
+	str, ok := j.Interface().(string)
+	if !ok {
+		return def
+	}
+
+	b, err = strconv.ParseBool(str)
+	if err != nil {
+		return def
+	}
+
+	return b
 }
 
 func (j *jsonValue) Int(def int) int {
-	return j.Json.MustInt(def)
+	i, err := j.Json.Int()
+	if err == nil {
+		return i
+	}
+
+	str, ok := j.Interface().(string)
+	if !ok {
+		return def
+	}
+
+	i, err = strconv.Atoi(str)
+	if err != nil {
+		return def
+	}
+
+	return i
 }
 
 func (j *jsonValue) String(def string) string {
@@ -79,7 +127,22 @@ func (j *jsonValue) String(def string) string {
 }
 
 func (j *jsonValue) Float64(def float64) float64 {
-	return j.Json.MustFloat64(def)
+	f, err := j.Json.Float64()
+	if err == nil {
+		return f
+	}
+
+	str, ok := j.Interface().(string)
+	if !ok {
+		return def
+	}
+
+	f, err = strconv.ParseFloat(str, 64)
+	if err != nil {
+		return def
+	}
+
+	return f
 }
 
 func (j *jsonValue) Duration(def time.Duration) time.Duration {

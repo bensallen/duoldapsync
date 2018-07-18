@@ -10,10 +10,15 @@ import (
 
 // Config is an interface abstraction for dynamic configuration
 type Config interface {
+	// provide the reader.Values interface
+	reader.Values
+	// Stop the config loader/watcher
 	Close() error
-	Bytes() []byte
-	Get(path ...string) reader.Value
+	// Load config sources
 	Load(source ...source.Source) error
+	// Force a source changeset sync
+	Sync() error
+	// Watch a value for changes
 	Watch(path ...string) (Watcher, error)
 }
 
@@ -33,7 +38,47 @@ type Options struct {
 
 type Option func(o *Options)
 
+var (
+	// Default Config Manager
+	DefaultConfig = NewConfig()
+)
+
 // NewConfig returns new config
 func NewConfig(opts ...Option) Config {
 	return newConfig(opts...)
+}
+
+// Return config as raw json
+func Bytes() []byte {
+	return DefaultConfig.Bytes()
+}
+
+// Return config as a map
+func Map() map[string]interface{} {
+	return DefaultConfig.Map()
+}
+
+// Scan values to a go type
+func Scan(v interface{}) error {
+	return DefaultConfig.Scan(v)
+}
+
+// Force a source changeset sync
+func Sync() error {
+	return DefaultConfig.Sync()
+}
+
+// Get a value from the config
+func Get(path ...string) reader.Value {
+	return DefaultConfig.Get(path...)
+}
+
+// Load config sources
+func Load(source ...source.Source) error {
+	return DefaultConfig.Load(source...)
+}
+
+// Watch a value for changes
+func Watch(path ...string) (Watcher, error) {
+	return DefaultConfig.Watch(path...)
 }
