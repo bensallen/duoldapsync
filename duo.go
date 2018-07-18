@@ -103,7 +103,7 @@ func (api *AdminAPI) Users(params url.Values) (*UsersResponse, error) {
 	return ret, nil
 }
 
-// UsersResponse represents the response from the POST /admin/v1/users endpoint
+// CreateUserResponse represents the response from the POST /admin/v1/users endpoint
 type CreateUserResponse struct {
 	StatResponse
 	Response UserResponse
