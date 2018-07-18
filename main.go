@@ -53,8 +53,8 @@ func main() {
 		}
 	}
 
-	us := UserSet{}
-	us.AddLDAPEntries(sr.Entries, c.LDAPUserSearch)
+	userSet := UserSet{}
+	userSet.AddLDAPEntries(sr.Entries, c.LDAPUserSearch)
 
 	api := duoapi.NewDuoApi(c.DuoAPI.Ikey, c.DuoAPI.Skey, c.DuoAPI.APIHost, "Duoldapsync", duoapi.SetTimeout(10*time.Second))
 
@@ -68,9 +68,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	us.AddDuoResults(dUsers)
+	userSet.AddDuoResults(dUsers)
 
-	errs := us.CreateDuoUsers(a, dryRun)
+	errs := userSet.CreateDuoUsers(a, dryRun)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			log.Printf("Error while creating Duo User, %s", err)
