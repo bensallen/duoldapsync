@@ -105,7 +105,10 @@ func (u UserSet) CreateDuoUsers(api *AdminAPI, dryRun bool) []error {
 
 func CreateDuoUser(api *AdminAPI, name string, user *User) error {
 
-	params := user.URLValues(name)
+	params, err := user.URLValues(name)
+	if err != nil {
+		return fmt.Errorf("URLValues failed: %s when attempting to create user: %s", err, name)
+	}
 	params.Set("status", "active")
 	//params.Set("notes", ...) TODO: Add lastUpdated
 	result, err := api.CreateUser(params)
@@ -120,13 +123,24 @@ func CreateDuoUser(api *AdminAPI, name string, user *User) error {
 }
 
 // URLValues transforms User's attributes into url.Values
-func (u *User) URLValues(username string) url.Values {
+func (u *User) URLValues(username string) (url.Values, error) {
 	params := url.Values{}
-	params.Set("username", username)
-	params.Set("realname", u.FullName)
-	params.Set("email", u.Email)
-	params.Set("firstname", u.FirstName)
-	params.Set("lastname", u.LastName)
-
-	return params
+	if username != "" {
+		params.Set("username", username)
+	} else {
+		return nil, fmt.Errorf("URLValues requires username argument to be a non-empty string")
+	}
+	if u.FullName != "" {
+		params.Set("realname", u.FullName)
+	}
+	if u.Email != "" {
+		params.Set("email", u.Email)
+	}
+	if u.FirstName != "" {
+		params.Set("firstname", u.FirstName)
+	}
+	if u.LastName != "" {
+		params.Set("lastname", u.LastName)
+	}
+	return params, nil
 }
