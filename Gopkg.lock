@@ -8,6 +8,12 @@
   version = "v0.5.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/duosecurity/duo_api_golang"
+  packages = ["."]
+  revision = "d0530c80e49a86b1c3f5525daa5a324bfb795ef3"
+
+[[projects]]
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
   revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
@@ -64,6 +70,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a2ababae8c7c465d4e7228c08f4d55c31113a8fa972b47f9ba1698c1a93419d7"
+  inputs-digest = "fd02c1c0e812a9e54a8c934e8a5034e4a04282580e08bcb3be209c7e24b783c8"
   solver-name = "gps-cdcl"
   solver-version = 1
