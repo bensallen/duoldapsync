@@ -35,10 +35,11 @@ type LDAPGroupSearch struct {
 
 // DuoAPI is the config attributes to access the DuoAPI
 type DuoAPI struct {
-	Ikey      string `json:"ikey"`
-	Skey      string `json:"skey"`
-	APIHost   string `json:"api_host"`
-	HTTPProxy string `json:"http_proxy"`
+	Ikey            string `json:"ikey"`
+	Skey            string `json:"skey"`
+	APIHost         string `json:"api_host"`
+	HTTPProxy       string `json:"http_proxy"`
+	EnrollValidSecs int    `json:"enroll_valid_secs"`
 }
 
 // DuoLDAPSyncConfig is overall configuration struct for duoldapsync

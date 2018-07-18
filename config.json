@@ -34,6 +34,7 @@
     "ikey": "DIXXXXXXXXXXXXXXXXXX",
     "skey": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     "api_host": "api-XXXXXXXX.duosecurity.com",
-    "http_proxy": ""
+    "http_proxy": "",
+    "enroll_valid_secs": 2592000
   }
 }
