@@ -1,0 +1,79 @@
+version: 2
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - clean-code
+      - test:
+          requires:
+            - clean-code
+      - race:
+          requires:
+            - clean-code
+      - compile:
+          requires:
+            - clean-code
+
+jobs:
+  clean-code:
+    docker:
+      - image: circleci/golang:latest
+    working_directory: /go/src/github.com/bensallen/duoldapsync
+    steps:
+      - checkout
+      - run:
+          name: Install dep
+          command: |
+            wget https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64
+            chmod +x ./dep-linux-amd64
+      - run:
+          name: Check vendored dependencies
+          command: ./dep-linux-amd64 status
+      - run:
+          name: Run go vet
+          command: go tool vet `find -name \*.go | grep -v ^./vendor`
+      - run:
+          name: Run golint
+          command: |
+            go get -u github.com/golang/lint/golint
+            golint ./
+      - run:
+          name: gofmt
+          command: test -z $(gofmt -s -l *.go)
+  test:
+    docker:
+      - image: circleci/golang:latest
+    working_directory: /go/src/github.com/bensallen/duoldapsync
+    environment:
+      - CGO_ENABLED: 0
+    steps:
+      - checkout
+      - run:
+          name: Test all
+          command: go test -a -ldflags '-s' ./...
+      - run:
+          name: Test coverage
+          command: go test -cover ./...
+  race:
+    docker:
+      - image: circleci/golang:latest
+    working_directory: /go/src/github.com/bensallen/duoldapsync
+    environment:
+      - CGO_ENABLED: 1
+    steps:
+      - checkout
+      - run:
+          name: Race detector
+          command: go test -race ./...
+  compile:
+    docker:
+      - image: circleci/golang:latest
+    working_directory: /go/src/github.com/bensallen/duoldapsync
+    environment:
+      - CGO_ENABLED: 0
+    steps:
+      - checkout
+      - run:
+          name: build all tools
+          command: |
+            go build -a -ldflags '-s' ./...
