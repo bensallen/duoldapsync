@@ -35,6 +35,7 @@
     "skey": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     "api_host": "api-XXXXXXXX.duosecurity.com",
     "http_proxy": "",
+    "delete_users": false,
     "send_enroll_email": false,
     "enroll_valid_seconds": 2592000
   }

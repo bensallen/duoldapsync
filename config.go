@@ -39,6 +39,7 @@ type DuoAPI struct {
 	Skey               string `json:"skey"`
 	APIHost            string `json:"api_host"`
 	HTTPProxy          string `json:"http_proxy"`
+	DeleteUsers        bool   `json:"delete_users"`
 	SendEnrollEmail    bool   `json:"send_enroll_email"`
 	EnrollValidSeconds int    `json:"enroll_valid_seconds"`
 }
