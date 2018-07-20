@@ -89,6 +89,9 @@ func main() {
 			}
 		} else if user.Duo == true && user.LDAP == false && conf.DuoAPI.DeleteUsers == true {
 			// Cleanup Duo Accounts
+			if debug {
+				log.Printf("Deleting Duo user: %s", user.Username)
+			}
 			resp, err := adminAPI.DeleteUser(user.DuoUserID)
 			if err != nil {
 				log.Printf("Duo User Delete Fail, %s", err)
