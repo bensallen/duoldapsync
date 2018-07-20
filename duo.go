@@ -10,13 +10,14 @@ import (
 // AdminAPI is a Duo Admin API object
 type AdminAPI struct {
 	duoapi.DuoApi
+	DryRun bool // If true, no-op any POST or DELETE endpoint calls.
 }
 
 // NewAdminAPI builds a new Duo Admin API object.
 // Argument api is a duoapi.DuoApi object used to make the Duo Rest API calls.
-// Example: authapi.NewAdminAPI(*duoapi.NewDuoApi(ikey,skey,host,userAgent,duoapi.SetTimeout(10*time.Second)))
-func NewAdminAPI(api duoapi.DuoApi) *AdminAPI {
-	return &AdminAPI{api}
+// Example: authapi.NewAdminAPI(*duoapi.NewDuoApi(ikey,skey,host,userAgent,duoapi.SetTimeout(10*time.Second),false))
+func NewAdminAPI(api duoapi.DuoApi, dryRun bool) *AdminAPI {
+	return &AdminAPI{api, dryRun}
 }
 
 // StatResponse is the standard status response from all endpoints. On success, Stat is 'OK'.
@@ -79,7 +80,7 @@ type UserResponse struct {
 	Status            string
 	Tokens            []TokenResponse
 	U2ftokens         []TokenResponse
-	UserID            string
+	UserID            string `json:"user_id"`
 	Username          string
 }
 
@@ -111,15 +112,53 @@ type CreateUserResponse struct {
 
 // CreateUser creates a new Duo user via the Duo Admin API
 func (api *AdminAPI) CreateUser(params url.Values) (*CreateUserResponse, error) {
+	if !api.DryRun {
+		_, body, err := api.SignedCall("POST", "/admin/v1/users", params, duoapi.UseTimeout)
+		if err != nil {
+			return nil, err
+		}
 
-	_, body, err := api.SignedCall("POST", "/admin/v1/users", params, duoapi.UseTimeout)
-	if err != nil {
-		return nil, err
+		ret := &CreateUserResponse{}
+		if err = json.Unmarshal(body, ret); err != nil {
+			return nil, err
+		}
+		return ret, nil
 	}
 
-	ret := &CreateUserResponse{}
-	if err = json.Unmarshal(body, ret); err != nil {
-		return nil, err
+	return &CreateUserResponse{StatResponse{Stat: "OK"}, UserResponse{}}, nil
+}
+
+// DeleteUser delete a Duo user via the Duo Admin API
+func (api *AdminAPI) DeleteUser(userID string) (*StatResponse, error) {
+	if !api.DryRun {
+		_, body, err := api.SignedCall("DELETE", "/admin/v1/users/"+userID, url.Values{}, duoapi.UseTimeout)
+		if err != nil {
+			return nil, err
+		}
+
+		ret := &StatResponse{}
+		if err = json.Unmarshal(body, ret); err != nil {
+			return nil, err
+		}
+		return ret, nil
 	}
-	return ret, nil
+	return &StatResponse{Stat: "OK"}, nil
+}
+
+// EnrollUser enrolls a user via the Duo Admin API with user name username and email
+// address email and send them an enrollment email that expires after valid_secs seconds.
+func (api *AdminAPI) EnrollUser(params url.Values) (*StatResponse, error) {
+	if !api.DryRun {
+		_, body, err := api.SignedCall("POST", "/admin/v1/users/enroll", params, duoapi.UseTimeout)
+		if err != nil {
+			return nil, err
+		}
+
+		ret := &StatResponse{}
+		if err = json.Unmarshal(body, ret); err != nil {
+			return nil, err
+		}
+		return ret, nil
+	}
+	return &StatResponse{Stat: "OK"}, nil
 }
