@@ -43,7 +43,7 @@ func TestUserSet_addDuoResults(t *testing.T) {
 			args: args{
 				result: &UsersResponse{
 					Response: []UserResponse{
-						UserResponse{
+						{
 							Username: "example1"},
 					},
 				},
@@ -56,7 +56,7 @@ func TestUserSet_addDuoResults(t *testing.T) {
 			args: args{
 				result: &UsersResponse{
 					Response: []UserResponse{
-						UserResponse{
+						{
 							Username: "example2"},
 					},
 				},
