@@ -14,6 +14,7 @@ import (
 var configPath string
 var debug bool
 var dryRun bool
+var enrollEmail bool
 
 func init() {
 	pflag.StringVarP(&configPath, "config", "f", "config.json", "Path to configuration file")
@@ -25,20 +26,20 @@ func main() {
 
 	pflag.Parse()
 
-	c, err := loadConfig(configPath)
+	conf, err := loadConfig(configPath)
 	if err != nil {
 		log.Printf("loadConfig error: %v\n", err)
 		os.Exit(1)
 	}
 
-	l, err := connect(c.LDAPServers)
+	l, err := connect(conf.LDAPServers)
 	if err != nil {
 		log.Printf("Connection to LDAP server(s) failed: %v\n", err)
 		os.Exit(1)
 	}
 	defer l.Close()
 
-	sr, err := enumUsers(l, c.LDAPUserSearch)
+	sr, err := enumUsers(l, conf.LDAPUserSearch)
 	if err != nil {
 		log.Printf("Error running search on LDAP: %v\n", err)
 		os.Exit(1)
@@ -54,29 +55,56 @@ func main() {
 	}
 
 	userSet := UserSet{}
-	userSet.AddLDAPEntries(sr.Entries, c.LDAPUserSearch)
+	userSet.addLDAPEntries(sr.Entries, conf.LDAPUserSearch)
 
-	api := duoapi.NewDuoApi(c.DuoAPI.Ikey, c.DuoAPI.Skey, c.DuoAPI.APIHost, "Duoldapsync", duoapi.SetTimeout(10*time.Second))
+	duoAPI := duoapi.NewDuoApi(conf.DuoAPI.Ikey, conf.DuoAPI.Skey, conf.DuoAPI.APIHost, "Duoldapsync", duoapi.SetTimeout(10*time.Second))
 
-	a := NewAdminAPI(*api)
-	dUsers, err := a.Users(url.Values{})
+	adminAPI := NewAdminAPI(*duoAPI, dryRun)
+	duoUsers, err := adminAPI.Users(url.Values{})
 	if err != nil {
 		log.Printf("Duo Users Enumeration Fail, %s", err)
 		os.Exit(1)
-	} else if dUsers.Stat != "OK" {
-		log.Printf("Duo API returned status when attemping user enumeration: %s", dUsers.Stat)
+	} else if duoUsers.Stat != "OK" {
+		log.Printf("Duo API returned status when attemping user enumeration: %s", duoUsers.Stat)
 		os.Exit(1)
 	}
 
-	userSet.AddDuoResults(dUsers)
+	userSet.addDuoResults(duoUsers)
 
-	errs := userSet.CreateDuoUsers(a, dryRun)
-	if len(errs) > 0 {
-		for _, err := range errs {
-			log.Printf("Error while creating Duo User, %s", err)
+	for _, user := range userSet {
+		if user.Duo == false {
+			if debug {
+				log.Printf("Creating Duo user: %s", user.Username)
+			}
+			err := user.duoCreate(adminAPI)
+			if err != nil {
+				log.Printf("Duo User Creation Failed, %s", err)
+				break
+			}
+			if conf.DuoAPI.SendEnrollEmail {
+				if debug {
+					log.Printf("Enrolling Duo user: %s", user.Username)
+				}
+				err := user.duoEnroll(adminAPI, conf.DuoAPI.EnrollValidSeconds)
+				if err != nil {
+					log.Printf("Duo User Enrollment Failed, %s", err)
+				}
+			}
 		}
 	}
 	//for user, userSet := range us {
 	//	fmt.Printf("User %s: %#v\n", user, *userSet)
 	//}
+
+	/*
+		resp, err := adminAPI.DeleteUser(userSet["bsallen"].DuoUserID)
+		if err != nil {
+			log.Printf("Duo User Delete Fail, %s", err)
+			os.Exit(1)
+		} else if resp.Stat != "OK" {
+			log.Printf("Duo API returned status when attemping user: %#v delete: %d", userSet["bsallen"], resp.Code)
+			os.Exit(1)
+		}
+	*/
+
 }

@@ -8,7 +8,7 @@ import (
 	ldap "gopkg.in/ldap.v2"
 )
 
-func TestUserSet_AddLDAPEntries(t *testing.T) {
+func TestUserSet_addLDAPEntries(t *testing.T) {
 	type args struct {
 		entries        []*ldap.Entry
 		ldapUserSearch *LDAPUserSearch
@@ -22,12 +22,12 @@ func TestUserSet_AddLDAPEntries(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.u.AddLDAPEntries(tt.args.entries, tt.args.ldapUserSearch)
+			tt.u.addLDAPEntries(tt.args.entries, tt.args.ldapUserSearch)
 		})
 	}
 }
 
-func TestUserSet_AddDuoResults(t *testing.T) {
+func TestUserSet_addDuoResults(t *testing.T) {
 	type args struct {
 		result *UsersResponse
 	}
@@ -49,7 +49,7 @@ func TestUserSet_AddDuoResults(t *testing.T) {
 				},
 			},
 			u:     UserSet{},
-			wants: UserSet{"example1": &User{Duo: true}},
+			wants: UserSet{"example1": &User{Duo: true, Username: "example1"}},
 		},
 		{
 			name: "Existing User and New User",
@@ -61,13 +61,13 @@ func TestUserSet_AddDuoResults(t *testing.T) {
 					},
 				},
 			},
-			u:     UserSet{"example1": &User{Duo: false, LDAP: true}},
-			wants: UserSet{"example1": &User{Duo: false, LDAP: true}, "example2": &User{Duo: true}},
+			u:     UserSet{"example1": &User{Duo: false, LDAP: true, Username: "example1"}},
+			wants: UserSet{"example1": &User{Duo: false, LDAP: true, Username: "example1"}, "example2": &User{Duo: true, Username: "example2"}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.u.AddDuoResults(tt.args.result)
+			tt.u.addDuoResults(tt.args.result)
 			if !reflect.DeepEqual(tt.u, tt.wants) {
 				t.Fatalf("Mismatch between result %v and wants %v", tt.u, tt.wants)
 			}
@@ -75,8 +75,9 @@ func TestUserSet_AddDuoResults(t *testing.T) {
 	}
 }
 
-func TestUser_URLValues(t *testing.T) {
+func TestUser_urlValues(t *testing.T) {
 	type fields struct {
+		Username    string
 		FullName    string
 		Email       string
 		FirstName   string
@@ -91,24 +92,21 @@ func TestUser_URLValues(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		args    args
 		want    url.Values
 		wantErr bool
 	}{
 		{
-			name: "Username only",
-			args: args{username: "test1"},
-			want: url.Values{"username": []string{"test1"}},
+			name:   "Username only",
+			fields: fields{Username: "test1"},
+			want:   url.Values{"username": []string{"test1"}},
 		},
 		{
 			name:    "No username",
-			args:    args{},
 			wantErr: true,
 		},
 		{
 			name:   "Username only",
-			args:   args{username: "test1"},
-			fields: fields{FullName: "Test One", Email: "test@example.com", FirstName: "Test", LastName: "One"},
+			fields: fields{Username: "test1", FullName: "Test One", Email: "test@example.com", FirstName: "Test", LastName: "One"},
 			want: url.Values{
 				"username":  []string{"test1"},
 				"realname":  []string{"Test One"},
@@ -121,6 +119,7 @@ func TestUser_URLValues(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &User{
+				Username:    tt.fields.Username,
 				FullName:    tt.fields.FullName,
 				Email:       tt.fields.Email,
 				FirstName:   tt.fields.FirstName,
@@ -129,7 +128,7 @@ func TestUser_URLValues(t *testing.T) {
 				Duo:         tt.fields.Duo,
 				NeedsUpdate: tt.fields.NeedsUpdate,
 			}
-			got, err := u.URLValues(tt.args.username)
+			got, err := u.urlValues()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("User.URLValues() error = %v, wantErr %v", err, tt.wantErr)
 				return
