@@ -33,13 +33,14 @@ type LDAPGroupSearch struct {
 	GroupAttr   string `json:"group_attr"` // Attribute to match an individual group
 }
 
-// DuoAPI is the config attributes to access the DuoAPI
+// DuoAPI is the config attributes to access and control behavior with the Duo Admin API
 type DuoAPI struct {
-	Ikey            string `json:"ikey"`
-	Skey            string `json:"skey"`
-	APIHost         string `json:"api_host"`
-	HTTPProxy       string `json:"http_proxy"`
-	EnrollValidSecs int    `json:"enroll_valid_secs"`
+	Ikey               string `json:"ikey"`
+	Skey               string `json:"skey"`
+	APIHost            string `json:"api_host"`
+	HTTPProxy          string `json:"http_proxy"`
+	SendEnrollEmail    bool   `json:"send_enroll_email"`
+	EnrollValidSeconds int    `json:"enroll_valid_seconds"`
 }
 
 // DuoLDAPSyncConfig is overall configuration struct for duoldapsync
