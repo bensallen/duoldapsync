@@ -38,7 +38,7 @@ func connect(servers []*LDAPServer) (*ldap.Conn, error) {
 		//}
 
 		if debug {
-			log.Printf("Connection successful: %v\n", *server)
+			log.Printf("LDAP connection successful: %v\n", *server)
 		}
 
 		return l, nil
@@ -58,7 +58,7 @@ func userSearch(user string, l *ldap.Conn, c *LDAPUserSearch) (*ldap.SearchResul
 	)
 
 	if debug {
-		log.Printf("Executing search: %v\n", searchRequest)
+		log.Printf("LDAP executing search: %v\n", searchRequest)
 	}
 
 	return l.Search(searchRequest)
@@ -75,7 +75,7 @@ func enumUsers(l *ldap.Conn, c *LDAPUserSearch) (*ldap.SearchResult, error) {
 	)
 
 	if debug {
-		log.Printf("Executing search: %v\n", searchRequest)
+		log.Printf("LDAP executing search: %v\n", searchRequest)
 	}
 
 	return l.Search(searchRequest)
@@ -92,7 +92,7 @@ func groupSearch(group string, l *ldap.Conn, c *LDAPGroupSearch) (*ldap.SearchRe
 	)
 
 	if debug {
-		log.Printf("Executing search: %v\n", searchRequest)
+		log.Printf("LDAP executing search: %v\n", searchRequest)
 	}
 
 	return l.Search(searchRequest)
@@ -110,7 +110,7 @@ func enumGroups(l *ldap.Conn, c *LDAPGroupSearch) (*ldap.SearchResult, error) {
 	)
 
 	if debug {
-		log.Printf("Executing search: %v\n", searchRequest)
+		log.Printf("LDAP executing search: %v\n", searchRequest)
 	}
 
 	return l.Search(searchRequest)
