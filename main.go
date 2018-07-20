@@ -17,7 +17,7 @@ var dryRun bool
 func init() {
 	pflag.StringVarP(&configPath, "config", "f", "config.json", "Path to configuration file")
 	pflag.BoolVarP(&debug, "debug", "d", false, "Enable debug output")
-	pflag.BoolVarP(&dryRun, "dryrun", "n", false, "Dry-run mode, don't actually create or update users in Duo")
+	pflag.BoolVarP(&dryRun, "dryrun", "n", false, "Dry-run mode, don't actually create or delete users in Duo")
 }
 
 func main() {
@@ -100,8 +100,4 @@ func main() {
 			}
 		}
 	}
-	//for user, userSet := range us {
-	//	fmt.Printf("User %s: %#v\n", user, *userSet)
-	//}
-
 }
