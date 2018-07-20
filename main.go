@@ -7,14 +7,12 @@ import (
 	"time"
 
 	"github.com/duosecurity/duo_api_golang"
-
 	"github.com/spf13/pflag"
 )
 
 var configPath string
 var debug bool
 var dryRun bool
-var enrollEmail bool
 
 func init() {
 	pflag.StringVarP(&configPath, "config", "f", "config.json", "Path to configuration file")
@@ -23,7 +21,6 @@ func init() {
 }
 
 func main() {
-
 	pflag.Parse()
 
 	conf, err := loadConfig(configPath)
@@ -90,21 +87,18 @@ func main() {
 					log.Printf("Duo User Enrollment Failed, %s", err)
 				}
 			}
+		} else if user.Duo == true && user.LDAP == false && conf.DuoAPI.DeleteUsers == true {
+			// Cleanup Duo Accounts
+			resp, err := adminAPI.DeleteUser(user.DuoUserID)
+			if err != nil {
+				log.Printf("Duo User Delete Fail, %s", err)
+			} else if resp.Stat != "OK" {
+				log.Printf("Duo API returned status %d when attemping to delete user %s", resp.Code, user.Username)
+			}
 		}
 	}
 	//for user, userSet := range us {
 	//	fmt.Printf("User %s: %#v\n", user, *userSet)
 	//}
-
-	/*
-		resp, err := adminAPI.DeleteUser(userSet["bsallen"].DuoUserID)
-		if err != nil {
-			log.Printf("Duo User Delete Fail, %s", err)
-			os.Exit(1)
-		} else if resp.Stat != "OK" {
-			log.Printf("Duo API returned status when attemping user: %#v delete: %d", userSet["bsallen"], resp.Code)
-			os.Exit(1)
-		}
-	*/
 
 }
