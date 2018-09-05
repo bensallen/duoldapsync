@@ -2,10 +2,12 @@
 Description=Duoldapsync Daemon
 
 [Service]
+Type=simple
 EnvironmentFile=/etc/sysconfig/duoldapsync
-ExecStart=/usr/sbin/sharkey-server --config=${DUOLDAPSYNC_CONFIG} start
+ExecStart=/usr/sbin/duoldapsync ${DUOLDAPSYNC_ARGS} --config=${DUOLDAPSYNC_CONFIG}
 Restart=on-failure
 User=duoldapsync
+Group=duoldapsync
 
 [Install]
 WantedBy=multi-user.target
