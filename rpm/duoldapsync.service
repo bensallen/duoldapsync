@@ -1,0 +1,11 @@
+[Unit]
+Description=Duoldapsync Daemon
+
+[Service]
+EnvironmentFile=/etc/sysconfig/duoldapsync
+ExecStart=/usr/sbin/sharkey-server --config=${DUOLDAPSYNC_CONFIG} start
+Restart=on-failure
+User=duoldapsync
+
+[Install]
+WantedBy=multi-user.target
