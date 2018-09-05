@@ -1,1 +1,5 @@
+# Path to duoldapsync's config file
 DUOLDAPSYNC_CONFIG=/etc/duoldapsync/duoldapsync.json
+
+# Extra ARGS to pass to duoldapsync
+DUOLDAPSYNC_ARGS=""
