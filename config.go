@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	config "github.com/micro/go-config"
 	"github.com/micro/go-config/source/file"
 )
@@ -81,6 +83,11 @@ func loadConfig(path string) (DuoLDAPSyncConfig, error) {
 
 	if err := conf.Get("duo_api").Scan(&c.DuoAPI); err != nil {
 		return c, err
+	}
+
+	if c.DuoAPI.HTTPProxy != "" {
+		os.Setenv("HTTPS_PROXY", c.DuoAPI.HTTPProxy)
+		os.Setenv("HTTP_PROXY", c.DuoAPI.HTTPProxy)
 	}
 
 	return c, nil
