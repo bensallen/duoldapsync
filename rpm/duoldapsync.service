@@ -4,7 +4,7 @@ Description=Duoldapsync Daemon
 [Service]
 Type=simple
 EnvironmentFile=/etc/sysconfig/duoldapsync
-ExecStart=/usr/sbin/duoldapsync ${DUOLDAPSYNC_ARGS} --config=${DUOLDAPSYNC_CONFIG}
+ExecStart=/usr/sbin/duoldapsync --config $DUOLDAPSYNC_CONFIG $DUOLDAPSYNC_ARGS
 Restart=on-failure
 User=duoldapsync
 Group=duoldapsync
