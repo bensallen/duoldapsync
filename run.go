@@ -32,7 +32,7 @@ func run(conf DuoLDAPSyncConfig) error {
 }
 
 func tickerLoop(ticker *time.Ticker, conf DuoLDAPSyncConfig, ldapConn *ldap.Conn, adminAPI *AdminAPI, done chan bool) {
-	for _ = range ticker.C {
+	for range ticker.C {
 		sr, err := enumUsers(ldapConn, conf.LDAPUserSearch)
 		if err != nil {
 			log.Printf("%v\n", err)
