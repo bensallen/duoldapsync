@@ -73,11 +73,11 @@ rm -rf %{buildroot}
 
 
 %changelog
-* Wed Sep 05 2018 Ben Allen <bsallen@alcf.anl.gov> - 0-0.1.gite213d7c995ca
-- Initial RPM release
-* Wed Sep 05 2018 Ben Allen <bsallen@alcf.anl.gov> - 0-0.2.gita832051fa7b4
-- Bump to 0.2
+* Fri Sep 07 2018 Ben Allen <bsallen@alcf.anl.gov> - 0-0.4.gita08d3a821c7a
+- Bump to 0.4
 * Wed Sep 05 2018 Ben Allen <bsallen@alcf.anl.gov> - 0-0.3.gita4c55289122e
 - Bump to 0.3
-* Wed Sep 07 2018 Ben Allen <bsallen@alcf.anl.gov> - 0-0.4.gita08d3a821c7a
-- Bump to 0.4
+* Wed Sep 05 2018 Ben Allen <bsallen@alcf.anl.gov> - 0-0.2.gita832051fa7b4
+- Bump to 0.2
+* Wed Sep 05 2018 Ben Allen <bsallen@alcf.anl.gov> - 0-0.1.gite213d7c995ca
+- Initial RPM release
