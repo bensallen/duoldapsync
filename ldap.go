@@ -61,7 +61,15 @@ func userSearch(user string, l *ldap.Conn, c *LDAPUserSearch) (*ldap.SearchResul
 		log.Printf("LDAP executing search: %v\n", searchRequest)
 	}
 
-	return l.Search(searchRequest)
+	sr, err := l.Search(searchRequest)
+	if err != nil {
+		return nil, fmt.Errorf("error running search on LDAP: %v", err)
+	}
+	if len(sr.Entries) == 0 {
+		return nil, errors.New("LDAP search returned no results")
+	}
+
+	return sr, nil
 }
 
 // enumUsers enumerates all users from LDAP
