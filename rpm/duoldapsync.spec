@@ -5,7 +5,7 @@
 
 Name:       duoldapsync
 Version:    0
-Release:    0.2.git%{shortrev}%{?dist}
+Release:    0.3.git%{shortrev}%{?dist}
 License:    ASL 2.0
 Summary:    LDAP to Duo API User and Group Syncing Daemon
 Group:      System Environment/Daemons
@@ -77,3 +77,5 @@ rm -rf %{buildroot}
 - Initial RPM release
 * Wed Sep 05 2018 Ben Allen <bsallen@alcf.anl.gov> - 0-0.2.gita832051fa7b4
 - Bump to 0.2
+* Wed Sep 05 2018 Ben Allen <bsallen@alcf.anl.gov> - 0-0.3.gita4c55289122e
+- Bump to 0.3
