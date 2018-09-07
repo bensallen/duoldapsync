@@ -2,13 +2,11 @@ package config
 
 import (
 	"bytes"
-	"errors"
-	"fmt"
-	"log"
-	"strings"
 	"sync"
 	"time"
 
+	"github.com/micro/go-config/loader"
+	"github.com/micro/go-config/loader/memory"
 	"github.com/micro/go-config/reader"
 	"github.com/micro/go-config/reader/json"
 	"github.com/micro/go-config/source"
@@ -19,28 +17,22 @@ type config struct {
 	opts Options
 
 	sync.RWMutex
-	// the current merged set
-	set *source.ChangeSet
+	// the current snapshot
+	snap *loader.Snapshot
 	// the current values
 	vals reader.Values
-	// all the sets
-	sets []*source.ChangeSet
-	// all the sources
-	sources []source.Source
-
-	idx      int
-	watchers map[int]*watcher
 }
 
 type watcher struct {
-	exit    chan bool
-	path    []string
-	value   reader.Value
-	updates chan reader.Value
+	lw    loader.Watcher
+	rd    reader.Reader
+	path  []string
+	value reader.Value
 }
 
 func newConfig(opts ...Option) Config {
 	options := Options{
+		Loader: memory.NewLoader(),
 		Reader: json.NewReader(),
 	}
 
@@ -48,29 +40,27 @@ func newConfig(opts ...Option) Config {
 		o(&options)
 	}
 
+	options.Loader.Load(options.Source...)
+	snap, _ := options.Loader.Snapshot()
+	vals, _ := options.Reader.Values(snap.ChangeSet)
+
 	c := &config{
-		exit:     make(chan bool),
-		opts:     options,
-		watchers: make(map[int]*watcher),
-		sources:  options.Source,
+		exit: make(chan bool),
+		opts: options,
+		snap: snap,
+		vals: vals,
 	}
 
-	for i, s := range options.Source {
-		go c.watch(i, s)
-	}
+	go c.run()
+
 	return c
 }
 
-func (c *config) watch(idx int, s source.Source) {
-	c.Lock()
-	c.sets = append(c.sets, &source.ChangeSet{Source: s.String()})
-	c.Unlock()
-
-	// watches a source for changes
-	watch := func(idx int, s source.Watcher) error {
+func (c *config) run() {
+	watch := func(w loader.Watcher) error {
 		for {
 			// get changeset
-			cs, err := s.Next()
+			snap, err := w.Next()
 			if err != nil {
 				return err
 			}
@@ -78,29 +68,17 @@ func (c *config) watch(idx int, s source.Source) {
 			c.Lock()
 
 			// save
-			c.sets[idx] = cs
-
-			// merge sets
-			set, err := c.opts.Reader.Merge(c.sets...)
-			if err != nil {
-				c.Unlock()
-				return err
-			}
+			c.snap = snap
 
 			// set values
-			c.vals, _ = c.opts.Reader.Values(set)
-			c.set = set
+			c.vals, _ = c.opts.Reader.Values(snap.ChangeSet)
 
 			c.Unlock()
-
-			// send watch updates
-			c.update()
 		}
 	}
 
 	for {
-		// watch the source
-		w, err := s.Watch()
+		w, err := c.opts.Loader.Watch()
 		if err != nil {
 			time.Sleep(time.Second)
 			continue
@@ -118,7 +96,7 @@ func (c *config) watch(idx int, s source.Source) {
 		}()
 
 		// block watch
-		if err := watch(idx, w); err != nil {
+		if err := watch(w); err != nil {
 			// do something better
 			time.Sleep(time.Second)
 		}
@@ -130,33 +108,6 @@ func (c *config) watch(idx int, s source.Source) {
 		select {
 		case <-c.exit:
 			return
-		default:
-		}
-	}
-}
-
-func (c *config) loaded() bool {
-	var loaded bool
-	c.RLock()
-	if c.vals != nil {
-		loaded = true
-	}
-	c.RUnlock()
-	return loaded
-}
-
-func (c *config) update() {
-	var watchers []*watcher
-
-	c.RLock()
-	for _, w := range c.watchers {
-		watchers = append(watchers, w)
-	}
-	c.RUnlock()
-
-	for _, w := range watchers {
-		select {
-		case w.updates <- c.vals.Get(w.path...):
 		default:
 		}
 	}
@@ -176,69 +127,26 @@ func (c *config) Scan(v interface{}) error {
 
 // sync loads all the sources, calls the parser and updates the config
 func (c *config) Sync() error {
-	var sets []*source.ChangeSet
-
-	c.Lock()
-
-	// read the source
-	var gerr []string
-
-	for _, source := range c.sources {
-		ch, err := source.Read()
-		if err != nil {
-			gerr = append(gerr, err.Error())
-			continue
-		}
-		sets = append(sets, ch)
-	}
-
-	// merge sets
-	set, err := c.opts.Reader.Merge(sets...)
-	if err != nil {
-		c.Unlock()
+	if err := c.opts.Loader.Sync(); err != nil {
 		return err
 	}
 
-	// set values
-	vals, err := c.opts.Reader.Values(set)
+	snap, err := c.opts.Loader.Snapshot()
 	if err != nil {
-		c.Unlock()
+		return err
+	}
+
+	c.Lock()
+	defer c.Unlock()
+
+	c.snap = snap
+	vals, err := c.opts.Reader.Values(snap.ChangeSet)
+	if err != nil {
 		return err
 	}
 	c.vals = vals
-	c.set = set
-
-	c.Unlock()
-
-	// update watchers
-	c.update()
-
-	if len(gerr) > 0 {
-		return fmt.Errorf("source loading errors: %s", strings.Join(gerr, "\n"))
-	}
 
 	return nil
-}
-
-// reload reads the sets and creates new values
-func (c *config) reload() {
-	c.Lock()
-
-	// merge sets
-	set, err := c.opts.Reader.Merge(c.sets...)
-	if err != nil {
-		c.Unlock()
-		return
-	}
-
-	// set values
-	c.vals, _ = c.opts.Reader.Values(set)
-	c.set = set
-
-	c.Unlock()
-
-	// update watchers
-	c.update()
 }
 
 func (c *config) Close() error {
@@ -252,55 +160,21 @@ func (c *config) Close() error {
 }
 
 func (c *config) Get(path ...string) reader.Value {
-	if !c.loaded() {
-		c.Sync()
-	}
-
-	c.Lock()
-	defer c.Unlock()
+	c.RLock()
+	defer c.RUnlock()
 
 	// did sync actually work?
 	if c.vals != nil {
 		return c.vals.Get(path...)
 	}
 
-	ch := c.set
-
-	// we are truly screwed, trying to load in a hacked way
-	v, err := c.opts.Reader.Values(ch)
-	if err != nil {
-		log.Printf("Failed to read values %v trying again", err)
-		// man we're so screwed
-		// Let's try hack this
-		// We should really be better
-		if ch == nil || ch.Data == nil {
-			ch = &source.ChangeSet{
-				Timestamp: time.Now(),
-				Source:    "config",
-				Data:      []byte(`{}`),
-			}
-		}
-		v, _ = c.opts.Reader.Values(ch)
-	}
-
-	// lets set it just because
-	c.vals = v
-
-	if c.vals != nil {
-		return c.vals.Get(path...)
-	}
-
-	// ok we're going hardcore now
+	// no value
 	return newValue()
 }
 
 func (c *config) Bytes() []byte {
-	if !c.loaded() {
-		c.Sync()
-	}
-
-	c.Lock()
-	defer c.Unlock()
+	c.RLock()
+	defer c.RUnlock()
 
 	if c.vals == nil {
 		return []byte{}
@@ -310,61 +184,42 @@ func (c *config) Bytes() []byte {
 }
 
 func (c *config) Load(sources ...source.Source) error {
-	var gerrors []string
-
-	for _, source := range sources {
-		set, err := source.Read()
-		if err != nil {
-			gerrors = append(gerrors,
-				fmt.Sprintf("error loading source %s: %v",
-					source,
-					err))
-			// continue processing
-			continue
-		}
-		c.Lock()
-		c.sources = append(c.sources, source)
-		c.sets = append(c.sets, set)
-		idx := len(c.sets) - 1
-		c.Unlock()
-		go c.watch(idx, source)
+	if err := c.opts.Loader.Load(sources...); err != nil {
+		return err
 	}
 
-	c.reload()
-
-	// Return errors
-	if len(gerrors) != 0 {
-		return errors.New(strings.Join(gerrors, "\n"))
+	snap, err := c.opts.Loader.Snapshot()
+	if err != nil {
+		return err
 	}
+
+	c.Lock()
+	defer c.Unlock()
+
+	c.snap = snap
+	vals, err := c.opts.Reader.Values(snap.ChangeSet)
+	if err != nil {
+		return err
+	}
+	c.vals = vals
+
 	return nil
 }
 
 func (c *config) Watch(path ...string) (Watcher, error) {
 	value := c.Get(path...)
 
-	c.Lock()
-
-	w := &watcher{
-		exit:    make(chan bool),
-		path:    path,
-		value:   value,
-		updates: make(chan reader.Value, 1),
+	w, err := c.opts.Loader.Watch(path...)
+	if err != nil {
+		return nil, err
 	}
 
-	id := c.idx
-	c.watchers[id] = w
-	c.idx++
-
-	c.Unlock()
-
-	go func() {
-		<-w.exit
-		c.Lock()
-		delete(c.watchers, id)
-		c.Unlock()
-	}()
-
-	return w, nil
+	return &watcher{
+		lw:    w,
+		rd:    c.opts.Reader,
+		path:  path,
+		value: value,
+	}, nil
 }
 
 func (c *config) String() string {
@@ -373,24 +228,25 @@ func (c *config) String() string {
 
 func (w *watcher) Next() (reader.Value, error) {
 	for {
-		select {
-		case <-w.exit:
-			return nil, errors.New("watcher stopped")
-		case v := <-w.updates:
-			if bytes.Equal(w.value.Bytes(), v.Bytes()) {
-				continue
-			}
-			w.value = v
-			return v, nil
+		s, err := w.lw.Next()
+		if err != nil {
+			return nil, err
 		}
+
+		// only process changes
+		if bytes.Equal(w.value.Bytes(), s.ChangeSet.Data) {
+			continue
+		}
+
+		v, err := w.rd.Values(s.ChangeSet)
+		if err != nil {
+			return nil, err
+		}
+		w.value = v.Get(w.path...)
+		return w.value, nil
 	}
 }
 
 func (w *watcher) Stop() error {
-	select {
-	case <-w.exit:
-	default:
-		close(w.exit)
-	}
-	return nil
+	return w.lw.Stop()
 }

@@ -4,6 +4,7 @@ package config
 import (
 	"context"
 
+	"github.com/micro/go-config/loader"
 	"github.com/micro/go-config/reader"
 	"github.com/micro/go-config/source"
 )
@@ -29,6 +30,7 @@ type Watcher interface {
 }
 
 type Options struct {
+	Loader loader.Loader
 	Reader reader.Reader
 	Source []source.Source
 

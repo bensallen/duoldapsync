@@ -23,6 +23,7 @@ func NewOptions(opts ...Option) Options {
 			"toml": toml.NewEncoder(),
 			"xml":  xml.NewEncoder(),
 			"hcl":  hcl.NewEncoder(),
+			"yml":  yaml.NewEncoder(),
 		},
 	}
 	for _, o := range opts {

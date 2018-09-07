@@ -1,9 +1,17 @@
 package config
 
 import (
+	"github.com/micro/go-config/loader"
 	"github.com/micro/go-config/reader"
 	"github.com/micro/go-config/source"
 )
+
+// WithLoader sets the loader for manager config
+func WithLoader(l loader.Loader) Option {
+	return func(o *Options) {
+		o.Loader = l
+	}
+}
 
 // WithSource appends a source to list of sources
 func WithSource(s source.Source) Option {

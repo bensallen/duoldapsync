@@ -10,15 +10,16 @@ Go-config makes this easy, pluggable and mergeable. You'll never have to deal wi
 - **Dynamic** - load config on the fly as you need it
 - **Pluggable** - choose which source to load from; file, env, consul
 - **Mergeable** - merge and override multiple config sources
-- **Fallback** - specify fallback values where keys don't exist
-- **Watch** - Watch the config for changes
+- **Observable** - Watch the config for changes
+- **Safe** - specify fallback values where keys don't exist
 
 ## Getting Started
 
 - [Source](#source) - A backend from which config is loaded
 - [Encoder](#encoder) - Handles encoding/decoding source config 
 - [Reader](#reader) - Merges multiple encoded sources as a single format
-- [Config](#config) - Config manager which manages multiple sources 
+- [Loader](#loader) - Loader manages multiple source loading
+- [Config](#config) - Config abstracts away the above interfaces
 - [Usage](#usage) - Example usage of go-config
 - [FAQ](#faq) - General questions and answers
 - [TODO](#todo) - TODO tasks/features
@@ -38,6 +39,7 @@ The following sources are supported:
 - [grpc](https://github.com/micro/go-config/tree/master/source/grpc) - read from grpc server
 - [memory](https://github.com/micro/go-config/tree/master/source/memory) - read from memory
 - [microcli](https://github.com/micro/go-config/tree/master/source/microcli) - read from micro cli flags
+- [runtimevar](https://github.com/micro/go-config/tree/master/source/runtimevar) - read from Go Cloud runtimevar watcher
 
 TODO:
 
@@ -126,11 +128,31 @@ type Value interface {
 }
 ```
 
+## Loader
+
+`Loader` manages loading from multiple sources and representing them as a single snapshot
+
+```go
+// Loader manages loading sources
+type Loader interface {
+	// Stop the loader
+	Close() error
+	// Load the sources
+	Load(...source.Source) error
+	// A Snapshot of loaded config
+	Snapshot() (*Snapshot, error)
+	// Force sync of sources
+	Sync() error
+	// Watch for changes
+	Watch(...string) (Watcher, error)
+	// Name of loader
+	String() string
+}
+```
+
 ## Config 
 
-`Config` manages all config, abstracting away sources, encoders and the reader. 
-
-It manages reading, syncing, watching from multiple backend sources and represents them as a single merged and queryable source.
+`Config` is the high level abstraction over all the underlying functionality. It provides a queryable top-level interface.
 
 ```go
 
@@ -157,10 +179,9 @@ type Config interface {
 - [Read Config](#read-config)
 - [Read Values](#read-values)
 - [Watch Path](#watch-path)
-- [Multiple Sources](#merge-sources)
+- [Multiple Sources](#multiple-sources)
 - [Set Source Encoder](#set-source-encoder)
 - [Add Reader Encoder](#add-reader-encoder)
-
 
 
 ### Sample Config
