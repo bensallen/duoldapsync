@@ -2,7 +2,7 @@
 github.com/BurntSushi/toml
 # github.com/bitly/go-simplejson v0.5.0
 github.com/bitly/go-simplejson
-# github.com/duosecurity/duo_api_golang v0.0.0-20180315112207-d0530c80e49a
+# github.com/duosecurity/duo_api_golang v0.0.0-20190107154727-539434bf0d45
 github.com/duosecurity/duo_api_golang
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
@@ -36,7 +36,7 @@ github.com/micro/go-config/encoder/xml
 github.com/micro/go-config/encoder/yaml
 # github.com/pkg/profile v1.2.1
 github.com/pkg/profile
-# github.com/spf13/pflag v1.0.2
+# github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
 # golang.org/x/sys v0.0.0-20180906133057-8cf3aee42992
 golang.org/x/sys/unix
