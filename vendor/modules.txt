@@ -1,0 +1,48 @@
+# github.com/BurntSushi/toml v0.3.0
+github.com/BurntSushi/toml
+# github.com/bitly/go-simplejson v0.5.0
+github.com/bitly/go-simplejson
+# github.com/duosecurity/duo_api_golang v0.0.0-20180315112207-d0530c80e49a
+github.com/duosecurity/duo_api_golang
+# github.com/fsnotify/fsnotify v1.4.7
+github.com/fsnotify/fsnotify
+# github.com/ghodss/yaml v1.0.0
+github.com/ghodss/yaml
+# github.com/hashicorp/hcl v1.0.0
+github.com/hashicorp/hcl
+github.com/hashicorp/hcl/hcl/ast
+github.com/hashicorp/hcl/hcl/parser
+github.com/hashicorp/hcl/hcl/token
+github.com/hashicorp/hcl/json/parser
+github.com/hashicorp/hcl/hcl/scanner
+github.com/hashicorp/hcl/hcl/strconv
+github.com/hashicorp/hcl/json/scanner
+github.com/hashicorp/hcl/json/token
+# github.com/imdario/mergo v0.3.6
+github.com/imdario/mergo
+# github.com/micro/go-config v0.8.0
+github.com/micro/go-config
+github.com/micro/go-config/source/file
+github.com/micro/go-config/loader
+github.com/micro/go-config/loader/memory
+github.com/micro/go-config/reader
+github.com/micro/go-config/reader/json
+github.com/micro/go-config/source
+github.com/micro/go-config/encoder
+github.com/micro/go-config/encoder/hcl
+github.com/micro/go-config/encoder/json
+github.com/micro/go-config/encoder/toml
+github.com/micro/go-config/encoder/xml
+github.com/micro/go-config/encoder/yaml
+# github.com/pkg/profile v1.2.1
+github.com/pkg/profile
+# github.com/spf13/pflag v1.0.2
+github.com/spf13/pflag
+# golang.org/x/sys v0.0.0-20180906133057-8cf3aee42992
+golang.org/x/sys/unix
+# gopkg.in/asn1-ber.v1 v1.0.0-20170511165959-379148ca0225
+gopkg.in/asn1-ber.v1
+# gopkg.in/ldap.v2 v2.5.1
+gopkg.in/ldap.v2
+# gopkg.in/yaml.v2 v2.2.1
+gopkg.in/yaml.v2
