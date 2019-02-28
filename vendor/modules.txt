@@ -4,6 +4,7 @@ github.com/BurntSushi/toml
 github.com/bitly/go-simplejson
 # github.com/duosecurity/duo_api_golang v0.0.0-20190107154727-539434bf0d45
 github.com/duosecurity/duo_api_golang
+github.com/duosecurity/duo_api_golang/admin
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
 # github.com/ghodss/yaml v1.0.0
