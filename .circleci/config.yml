@@ -30,17 +30,16 @@ jobs:
           name: Run go vet
           command: go vet `find -name \*.go | grep -v ^./vendor`
       - run:
-          name: Run golint
+          name: Run golangci-lint
           command: |
-            go get -u github.com/mgechev/revive
-            test -z "$(revive -exclude=vendor/... ./...)"
+            curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.15.0
+            test -z "$(golangci-lint run)"
       - run:
           name: gofmt
-          command: test -z "$(gofmt -s -l pkg cmd internal)"
+          command: test -z "$(gofmt -s -l *.go)"
   test:
     docker:
       - image: circleci/golang:latest
-    working_directory: /go/src/github.com/bensallen/duoldapsync
     environment:
       - CGO_ENABLED: 0
     steps:
@@ -54,7 +53,6 @@ jobs:
   race:
     docker:
       - image: circleci/golang:latest
-    working_directory: /go/src/github.com/bensallen/duoldapsync
     environment:
       - CGO_ENABLED: 1
     steps:
@@ -65,7 +63,6 @@ jobs:
   compile:
     docker:
       - image: circleci/golang:latest
-    working_directory: /go/src/github.com/bensallen/duoldapsync
     environment:
       - CGO_ENABLED: 0
     steps:

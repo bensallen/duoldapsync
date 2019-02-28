@@ -88,9 +88,7 @@ func TestUser_urlValues(t *testing.T) {
 		Duo         bool
 		NeedsUpdate bool
 	}
-	type args struct {
-		username string
-	}
+
 	tests := []struct {
 		name    string
 		fields  fields

@@ -47,31 +47,6 @@ func connect(servers []*LDAPServer) (*ldap.Conn, error) {
 	return l, errors.New(strings.Join(connErrs, "\n"))
 }
 
-func userSearch(user string, l *ldap.Conn, c *LDAPUserSearch) (*ldap.SearchResult, error) {
-	// Search for the given username
-	searchRequest := ldap.NewSearchRequest(
-		c.BaseDN,
-		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
-		fmt.Sprintf("(&(%s)(%s=%s))", c.UserFilter, c.UserAttr, user),
-		[]string{c.UserAttr, c.GroupMembershipAttr, c.EmailAttr, c.FullNameAttr, c.FirstNameAttr, c.LastNameAttr},
-		nil,
-	)
-
-	if debug {
-		log.Printf("LDAP executing search: %v\n", searchRequest)
-	}
-
-	sr, err := l.Search(searchRequest)
-	if err != nil {
-		return nil, fmt.Errorf("error running search on LDAP: %v", err)
-	}
-	if len(sr.Entries) == 0 {
-		return nil, errors.New("LDAP search returned no results")
-	}
-
-	return sr, nil
-}
-
 // enumUsers enumerates all users from LDAP
 func enumUsers(l *ldap.Conn, c *LDAPUserSearch) (*ldap.SearchResult, error) {
 	searchRequest := ldap.NewSearchRequest(
@@ -89,6 +64,7 @@ func enumUsers(l *ldap.Conn, c *LDAPUserSearch) (*ldap.SearchResult, error) {
 	return l.Search(searchRequest)
 }
 
+/*
 func groupSearch(group string, l *ldap.Conn, c *LDAPGroupSearch) (*ldap.SearchResult, error) {
 	// Search for the given group
 	searchRequest := ldap.NewSearchRequest(
@@ -123,3 +99,4 @@ func enumGroups(l *ldap.Conn, c *LDAPGroupSearch) (*ldap.SearchResult, error) {
 
 	return l.Search(searchRequest)
 }
+*/

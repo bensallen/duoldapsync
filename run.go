@@ -58,7 +58,7 @@ func tickerLoop(ticker *time.Ticker, conf DuoLDAPSyncConfig, ldapConn *ldap.Conn
 		userSet.addDuoResults(duoUsers)
 
 		for _, user := range userSet {
-			if user.Duo == false {
+			if !user.Duo {
 				if debug {
 					log.Printf("Creating Duo user: %s", user.Username)
 				}
@@ -76,7 +76,7 @@ func tickerLoop(ticker *time.Ticker, conf DuoLDAPSyncConfig, ldapConn *ldap.Conn
 						log.Printf("Duo User Enrollment Failed, %s", err)
 					}
 				}
-			} else if user.Duo == true && user.LDAP == false && conf.DuoAPI.DeleteUsers == true {
+			} else if user.Duo && !user.LDAP && conf.DuoAPI.DeleteUsers {
 				// Cleanup Duo Accounts
 				if debug {
 					log.Printf("Deleting Duo user: %s", user.Username)
