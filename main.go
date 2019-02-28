@@ -44,7 +44,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := run(conf); err != nil {
+	if err := run(conf, dryRun); err != nil {
 		log.Printf("Run error: %v\n", err)
 		os.Exit(1)
 	}
