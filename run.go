@@ -3,15 +3,15 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/url"
 	"time"
 
 	"gopkg.in/ldap.v2"
 
-	"github.com/duosecurity/duo_api_golang"
+	duoapi "github.com/duosecurity/duo_api_golang"
+	"github.com/duosecurity/duo_api_golang/admin"
 )
 
-func run(conf DuoLDAPSyncConfig) error {
+func run(conf DuoLDAPSyncConfig, dryRun bool) error {
 	l, err := connect(conf.LDAPServers)
 	if err != nil {
 		return fmt.Errorf("connection to LDAP server(s) failed: %v", err)
@@ -19,19 +19,19 @@ func run(conf DuoLDAPSyncConfig) error {
 	defer l.Close()
 
 	duoAPI := duoapi.NewDuoApi(conf.DuoAPI.Ikey, conf.DuoAPI.Skey, conf.DuoAPI.APIHost, "Duoldapsync", duoapi.SetTimeout(10*time.Second))
-	adminAPI := NewAdminAPI(*duoAPI, dryRun)
+	client := admin.New(*duoAPI)
 
 	// Loop forever sleeping pollTime seconds between iterations.
 	ticker := time.NewTicker(time.Second * time.Duration(pollTime))
 	done := make(chan bool)
 
-	go tickerLoop(ticker, conf, l, adminAPI, done)
+	go tickerLoop(ticker, conf, l, client, dryRun, done)
 	<-done
 
 	return nil
 }
 
-func tickerLoop(ticker *time.Ticker, conf DuoLDAPSyncConfig, ldapConn *ldap.Conn, adminAPI *AdminAPI, done chan bool) {
+func tickerLoop(ticker *time.Ticker, conf DuoLDAPSyncConfig, ldapConn *ldap.Conn, client *admin.Client, dryRun bool, done chan bool) {
 	for range ticker.C {
 		sr, err := enumUsers(ldapConn, conf.LDAPUserSearch)
 		if err != nil {
@@ -46,7 +46,7 @@ func tickerLoop(ticker *time.Ticker, conf DuoLDAPSyncConfig, ldapConn *ldap.Conn
 		userSet := UserSet{}
 		userSet.addLDAPEntries(sr.Entries, conf.LDAPUserSearch)
 
-		duoUsers, err := adminAPI.Users(url.Values{})
+		duoUsers, err := client.GetUsers()
 		if err != nil {
 			log.Printf("Duo Users Enumeration Fail, %s", err)
 			continue
@@ -62,7 +62,7 @@ func tickerLoop(ticker *time.Ticker, conf DuoLDAPSyncConfig, ldapConn *ldap.Conn
 				if debug {
 					log.Printf("Creating Duo user: %s", user.Username)
 				}
-				err := user.duoCreate(adminAPI)
+				err := user.duoCreate(client, dryRun)
 				if err != nil {
 					log.Printf("Duo User Creation Failed, %s", err)
 					break
@@ -71,7 +71,7 @@ func tickerLoop(ticker *time.Ticker, conf DuoLDAPSyncConfig, ldapConn *ldap.Conn
 					if debug {
 						log.Printf("Enrolling Duo user: %s", user.Username)
 					}
-					err := user.duoEnroll(adminAPI, conf.DuoAPI.EnrollValidSeconds)
+					err := user.duoEnroll(client, conf.DuoAPI.EnrollValidSeconds, dryRun)
 					if err != nil {
 						log.Printf("Duo User Enrollment Failed, %s", err)
 					}
@@ -81,7 +81,7 @@ func tickerLoop(ticker *time.Ticker, conf DuoLDAPSyncConfig, ldapConn *ldap.Conn
 				if debug {
 					log.Printf("Deleting Duo user: %s", user.Username)
 				}
-				resp, err := adminAPI.DeleteUser(user.DuoUserID)
+				resp, err := DeleteUser(client, user.DuoUserID, dryRun)
 				if err != nil {
 					log.Printf("Duo User Delete Fail, %s", err)
 				} else if resp.Stat != "OK" {
