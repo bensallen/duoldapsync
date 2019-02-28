@@ -37,13 +37,14 @@ type LDAPGroupSearch struct {
 
 // DuoAPI is the config attributes to access and control behavior with the Duo Admin API
 type DuoAPI struct {
+	DeleteUsers        bool   `json:"delete_users"`
+	SendEnrollEmail    bool   `json:"send_enroll_email"`
+	MaxDeleteUsers     int    `json:"max_delete_users"`
+	EnrollValidSeconds int    `json:"enroll_valid_seconds"`
 	Ikey               string `json:"ikey"`
 	Skey               string `json:"skey"`
 	APIHost            string `json:"api_host"`
 	HTTPProxy          string `json:"http_proxy"`
-	DeleteUsers        bool   `json:"delete_users"`
-	SendEnrollEmail    bool   `json:"send_enroll_email"`
-	EnrollValidSeconds int    `json:"enroll_valid_seconds"`
 }
 
 // DuoLDAPSyncConfig is overall configuration struct for duoldapsync
