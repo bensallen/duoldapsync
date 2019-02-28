@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/duosecurity/duo_api_golang/admin"
 	ldap "gopkg.in/ldap.v2"
 )
 
@@ -24,35 +25,35 @@ type User struct {
 }
 
 // DuoCreate creates a user via the Duo Admin API
-func (u *User) duoCreate(api *AdminAPI) error {
+func (u *User) duoCreate(client *admin.Client, dryRun bool) error {
 	params, err := u.urlValues()
 	if err != nil {
 		return fmt.Errorf("URLValues failed: %s when attempting to create user: %s", err, u.Username)
 	}
 	params.Set("status", "active")
 	//params.Set("notes", ...) TODO: Add lastUpdated
-	result, err := api.CreateUser(params)
+	result, err := CreateUser(client, params, dryRun)
 
 	if err != nil {
 		return fmt.Errorf("CreateUser failed: %s when attempting to create user: %s", err, u.Username)
 	} else if result.Stat != "OK" {
-		return fmt.Errorf("CreateUser Duo API returned non-ok status when attemping to create user: %s with message: %s", u.Username, result.Message)
+		return fmt.Errorf("CreateUser Duo API returned non-ok status when attemping to create user: %s with message: %v", u.Username, result.Message)
 	}
 	return nil
 }
 
 // DuoEnroll sends an enrollment email via the Duo Admin API
-func (u *User) duoEnroll(api *AdminAPI, enrollValidSecs int) error {
+func (u *User) duoEnroll(client *admin.Client, enrollValidSecs int, dryRun bool) error {
 	enrollParams := url.Values{}
 	enrollParams.Set("username", u.Username)
 	enrollParams.Set("email", u.Email)
 	enrollParams.Set("valid_secs", strconv.Itoa(enrollValidSecs))
 
-	result, err := api.EnrollUser(enrollParams)
+	result, err := EnrollUser(client, enrollParams, dryRun)
 	if err != nil {
 		return fmt.Errorf("CreateUser failed: %s when attempting to create user: %s", err, u.Username)
 	} else if result.Stat != "OK" {
-		return fmt.Errorf("CreateUser Duo API returned non-ok status when attemping to create user: %s with message: %s", u.Username, result.Message)
+		return fmt.Errorf("CreateUser Duo API returned non-ok status when attemping to create user: %s with message: %v", u.Username, result.Message)
 	}
 	return nil
 }
@@ -138,7 +139,7 @@ func (u UserSet) addLDAPEntries(entries []*ldap.Entry, ldapUserSearch *LDAPUserS
 
 // AddDuoResults iterates over a UsersResult from the Duo Admin API and marks the Duo attribute in a User in the UserSet
 // to show that the user already exist in Duo.
-func (u UserSet) addDuoResults(result *UsersResponse) {
+func (u UserSet) addDuoResults(result *admin.GetUsersResult) {
 	for _, dUser := range result.Response {
 		if _, ok := u[dUser.Username]; ok {
 			u[dUser.Username].Duo = true

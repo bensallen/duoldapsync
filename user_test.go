@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/duosecurity/duo_api_golang/admin"
 	ldap "gopkg.in/ldap.v2"
 )
 
@@ -29,7 +30,7 @@ func TestUserSet_addLDAPEntries(t *testing.T) {
 
 func TestUserSet_addDuoResults(t *testing.T) {
 	type args struct {
-		result *UsersResponse
+		result *admin.GetUsersResult
 	}
 
 	tests := []struct {
@@ -41,8 +42,8 @@ func TestUserSet_addDuoResults(t *testing.T) {
 		{
 			name: "example1 Single User",
 			args: args{
-				result: &UsersResponse{
-					Response: []UserResponse{
+				result: &admin.GetUsersResult{
+					Response: []admin.User{
 						{
 							Username: "example1",
 						},
@@ -55,8 +56,8 @@ func TestUserSet_addDuoResults(t *testing.T) {
 		{
 			name: "Existing User and New User",
 			args: args{
-				result: &UsersResponse{
-					Response: []UserResponse{
+				result: &admin.GetUsersResult{
+					Response: []admin.User{
 						{
 							Username: "example2",
 						},
