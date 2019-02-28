@@ -28,7 +28,7 @@ jobs:
           command: go mod graph
       - run:
           name: Run go vet
-          command: go tool vet `find -name \*.go | grep -v ^./vendor`
+          command: go vet `find -name \*.go | grep -v ^./vendor`
       - run:
           name: Run golint
           command: |
