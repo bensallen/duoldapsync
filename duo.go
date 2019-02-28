@@ -18,7 +18,7 @@ type PostUsersResult struct {
 // CreateUser creates a new Duo user via the Duo Admin Client
 // See https://duo.com/docs/adminapi#create-user
 func CreateUser(client *admin.Client, params url.Values, dryRun bool) (*PostUsersResult, error) {
-	if dryRun {
+	if !dryRun {
 		_, body, err := client.SignedCall("POST", "/admin/v1/users", params, duoapi.UseTimeout)
 		if err != nil {
 			return nil, err
