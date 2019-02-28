@@ -32,8 +32,9 @@ jobs:
       - run:
           name: Run golangci-lint
           command: |
-            curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s v1.15.0
-            test -z "$(~/bin/golangci-lint run)"
+            curl -sL -o /tmp/golangci-lint-install.sh https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
+            sh -x /tmp/golangci-lint-install.sh -d -b $HOME/bin v1.15.0
+            test -z "$($HOME/bin/golangci-lint run)"
       - run:
           name: gofmt
           command: test -z "$(gofmt -s -l *.go)"
