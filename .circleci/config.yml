@@ -21,6 +21,10 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Checkout forked duo_api_golang
+          command: |
+            git clone --branch lint_fixes https://github.com/bensallen/duo_api_golang ../duo_api_golang
+      - run:
           name: Go mod verify
           command: go mod verify
       - run:
