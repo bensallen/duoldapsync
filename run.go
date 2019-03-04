@@ -26,12 +26,23 @@ func run(conf DuoLDAPSyncConfig, dryRun bool) error {
 	done := make(chan bool)
 
 	go tickerLoop(ticker, conf, l, client, dryRun, done)
+
+	// Wait for tickerLoop to exit
 	<-done
+	close(done)
 
 	return nil
 }
 
 func tickerLoop(ticker *time.Ticker, conf DuoLDAPSyncConfig, ldapConn *ldap.Conn, client *admin.Client, dryRun bool, done chan bool) {
+
+	// MaxDeleteUsers needs to be 1 or greater to make sense. Disable DeleteUsers
+	// to disable user deletion instead of trying to set MaxDeleteUsers to 0.
+	maxDeleteUsers := 1
+	if conf.DuoAPI.MaxDeleteUsers > 0 {
+		maxDeleteUsers = conf.DuoAPI.MaxDeleteUsers
+	}
+
 	for range ticker.C {
 		sr, err := enumUsers(ldapConn, conf.LDAPUserSearch)
 		if err != nil {
@@ -41,6 +52,12 @@ func tickerLoop(ticker *time.Ticker, conf DuoLDAPSyncConfig, ldapConn *ldap.Conn
 
 		if debug {
 			log.Printf("LDAP found %d results", len(sr.Entries))
+		}
+
+		// Skip the rest of the loop so we avoid deleting all Duo users accidently
+		if len(sr.Entries) == 0 {
+			log.Print("WARNING no LDAP results found, skipping")
+			continue
 		}
 
 		userSet := UserSet{}
@@ -56,6 +73,9 @@ func tickerLoop(ticker *time.Ticker, conf DuoLDAPSyncConfig, ldapConn *ldap.Conn
 		}
 
 		userSet.addDuoResults(duoUsers)
+
+		usersDeleteOverflow := false
+		usersDelete := make([]*User, 0, maxDeleteUsers)
 
 		for _, user := range userSet {
 			if !user.Duo {
@@ -77,18 +97,40 @@ func tickerLoop(ticker *time.Ticker, conf DuoLDAPSyncConfig, ldapConn *ldap.Conn
 					}
 				}
 			} else if user.Duo && !user.LDAP && conf.DuoAPI.DeleteUsers {
-				// Cleanup Duo Accounts
-				if debug {
-					log.Printf("Deleting Duo user: %s", user.Username)
-				}
-				resp, err := DeleteUser(client, user.DuoUserID, dryRun)
-				if err != nil {
-					log.Printf("Duo User Delete Fail, %s", err)
-				} else if resp.Stat != "OK" {
-					log.Printf("Duo API returned status %d when attemping to delete user %s", resp.Code, user.Username)
+				if len(usersDelete) < cap(usersDelete) {
+					usersDelete = append(usersDelete, user)
+				} else {
+					usersDeleteOverflow = true
 				}
 			}
 		}
+
+		// Clear usersDelete if overflown (eg. gone over MaxDeleteUsers). Otherwise delete users.
+		if usersDeleteOverflow {
+			log.Printf("WARNING more users to delete than the configured DuoAPI.MaxDeleteUsers setting of %d allows, no users will be deleted", maxDeleteUsers)
+			usersDelete = make([]*User, maxDeleteUsers)
+		} else if len(usersDelete) > 0 {
+			deleteUsers(client, usersDelete, dryRun)
+		}
+
+		// Allow user deletes to retry next tick.
+		usersDeleteOverflow = false
 	}
+
+	// Tell run() tickerLoop is done
 	done <- true
+}
+
+func deleteUsers(client *admin.Client, users []*User, dryRun bool) {
+	for _, user := range users {
+		if debug {
+			log.Printf("Deleting Duo user: %s", user.Username)
+		}
+		resp, err := DeleteUser(client, user.DuoUserID, dryRun)
+		if err != nil {
+			log.Printf("Duo User Delete Fail, %s", err)
+		} else if resp.Stat != "OK" {
+			log.Printf("Duo API returned status %d when attemping to delete user %s", resp.Code, user.Username)
+		}
+	}
 }
