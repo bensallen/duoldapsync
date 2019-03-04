@@ -108,13 +108,9 @@ func tickerLoop(ticker *time.Ticker, conf DuoLDAPSyncConfig, ldapConn *ldap.Conn
 		// Clear usersDelete if overflown (eg. gone over MaxDeleteUsers). Otherwise delete users.
 		if usersDeleteOverflow {
 			log.Printf("WARNING more users to delete than the configured DuoAPI.MaxDeleteUsers setting of %d allows, no users will be deleted", maxDeleteUsers)
-			usersDelete = make([]*User, maxDeleteUsers)
 		} else if len(usersDelete) > 0 {
 			deleteUsers(client, usersDelete, dryRun)
 		}
-
-		// Allow user deletes to retry next tick.
-		usersDeleteOverflow = false
 	}
 
 	// Tell run() tickerLoop is done
