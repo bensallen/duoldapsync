@@ -50,6 +50,10 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Checkout forked duo_api_golang
+          command: |
+            git clone --branch lint_fixes https://github.com/bensallen/duo_api_golang ../duo_api_golang
+      - run:
           name: Test all
           command: go test -a -ldflags '-s' ./...
       - run:
@@ -63,6 +67,10 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Checkout forked duo_api_golang
+          command: |
+            git clone --branch lint_fixes https://github.com/bensallen/duo_api_golang ../duo_api_golang
+      - run:
           name: Race detector
           command: go test -race ./...
   compile:
@@ -72,6 +80,10 @@ jobs:
       - CGO_ENABLED: 0
     steps:
       - checkout
+      - run:
+          name: Checkout forked duo_api_golang
+          command: |
+            git clone --branch lint_fixes https://github.com/bensallen/duo_api_golang ../duo_api_golang
       - run:
           name: build all tools
           command: |
