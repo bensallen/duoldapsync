@@ -5,7 +5,7 @@
 
 Name:       duoldapsync
 Version:    0
-Release:    0.4.git%{shortrev}%{?dist}
+Release:    0.5.git%{shortrev}%{?dist}
 License:    ASL 2.0
 Summary:    LDAP to Duo API User and Group Syncing Daemon
 Group:      System Environment/Daemons
@@ -40,7 +40,7 @@ install -m 0644 rpm/%{name}.sysconfig %{buildroot}/%{_sysconfdir}/sysconfig/%{na
 install -d %{buildroot}%{_sysconfdir}/duoldapsync
 install -m 0644 examples/duoldapconfig.json %{buildroot}%{_sysconfdir}/%{name}/duoldapsync.json.example
 
-%pre 
+%pre
 getent group duoldapsync >/dev/null || groupadd -r duoldapsync
 getent passwd duoldapsync >/dev/null || \
     useradd --system --gid duoldapsync --shell /sbin/nologin --home-dir %{_sysconfdir}/%{name} \
@@ -73,6 +73,8 @@ rm -rf %{buildroot}
 
 
 %changelog
+* Mon Mar 04 2019 Ben Allen <bsallen@alcf.anl.gov> - 0-0.5.gitaf02d787236b
+- Bump to 0.5
 * Fri Sep 07 2018 Ben Allen <bsallen@alcf.anl.gov> - 0-0.4.gita08d3a821c7a
 - Bump to 0.4
 * Wed Sep 05 2018 Ben Allen <bsallen@alcf.anl.gov> - 0-0.3.gita4c55289122e
