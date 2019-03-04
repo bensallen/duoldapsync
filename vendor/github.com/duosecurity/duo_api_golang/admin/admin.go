@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/duosecurity/duo_api_golang"
+	duoapi "github.com/duosecurity/duo_api_golang"
 )
 
 // Client provides access to Duo's admin API.
@@ -36,20 +36,20 @@ func New(base duoapi.DuoApi) *Client {
 
 // User models a single user.
 type User struct {
-	Alias1            *string
-	Alias2            *string
-	Alias3            *string
-	Alias4            *string
+	Alias1            string
+	Alias2            string
+	Alias3            string
+	Alias4            string
 	Created           uint64
 	Email             string
-	FirstName         *string
+	FirstName         string
 	Groups            []Group
-	LastDirectorySync *uint64 `json:"last_directory_sync"`
-	LastLogin         *uint64 `json:"last_login"`
-	LastName          *string
+	LastDirectorySync uint64 `json:"last_directory_sync"`
+	LastLogin         uint64 `json:"last_login"`
+	LastName          string
 	Notes             string
 	Phones            []Phone
-	RealName          *string
+	RealName          string
 	Status            string
 	Tokens            []Token
 	UserID            string `json:"user_id"`
@@ -58,20 +58,20 @@ type User struct {
 
 // Group models a group to which users may belong.
 type Group struct {
-	Desc             string
-	GroupID          string `json:"group_id"`
-	MobileOTPEnabled bool   `json:"mobile_otp_enabled"`
-	Name             string
+	MobileOTPEnabled bool `json:"mobile_otp_enabled"`
 	PushEnabled      bool `json:"push_enabled"`
 	SMSEnabled       bool `json:"sms_enabled"`
-	Status           string
 	VoiceEnabled     bool `json:"voice_enabled"`
+	Desc             string
+	GroupID          string `json:"group_id"`
+	Name             string
+	Status           string
 }
 
 // Phone models a user's phone.
 type Phone struct {
 	Activated        bool
-	Capabilities     []string
+	SMSPasscodesSent bool
 	Encrypted        string
 	Extension        string
 	Fingerprint      string
@@ -82,8 +82,8 @@ type Phone struct {
 	Postdelay        string
 	Predelay         string
 	Screenlock       string
-	SMSPasscodesSent bool
 	Type             string
+	Capabilities     []string
 	Users            []User
 }
 

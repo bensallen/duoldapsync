@@ -1,5 +1,7 @@
 module github.com/bensallen/duoldapsync
 
+replace github.com/duosecurity/duo_api_golang => ../duo_api_golang
+
 require (
 	github.com/BurntSushi/toml v0.3.0 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
